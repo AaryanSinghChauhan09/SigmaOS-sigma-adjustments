@@ -3,7 +3,7 @@ name = "SigmaOS-sigma-adjustments"
 tier = 2
 stability = "scaffold"
 language = "rust"
-description = "sigma-adjustments component"
+description = "SigmaOS sigma-adjustments - modular Rust crate for the SigmaOS system"
 upstream = []
 
 [contract]
