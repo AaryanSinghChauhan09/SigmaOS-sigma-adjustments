@@ -1,77 +1,131 @@
-//! SigmaOS System Adjustments
-//! Inspired by Linux Mint mintsystem
-//! Manages CPU governors, sysctl memory tuning, and hardware optimization.
+//! SigmaOS-sigma_adjustments — sigma_adjustments component for SigmaOS
+#![forbid(unsafe_code)]
+#![warn(missing_docs)]
 
-/// GovernorMode represents the CPU governor mode for system optimization.
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub enum GovernorMode {
-    Performance,
-    Powersave,
-    Schedutil,
+use thiserror::Error;
+
+/// Error types for this component.
+#[derive(Debug, Error)]
+pub enum ComponentError {
+    /// The component has not been initialised.
+    #[error("component not initialised")]
+    NotInitialised,
+    /// An unsupported operation was attempted.
+    #[error("unsupported operation: {0}")]
+    Unsupported(&'static str),
 }
 
-impl GovernorMode {
-    pub fn as_str(&self) -> &'static str {
-        match self {
-            Self::Performance => "performance",
-            Self::Powersave => "powersave",
-            Self::Schedutil => "schedutil",
-        }
-    }
+/// Convenience result type.
+pub type ComponentResult<T> = Result<T, ComponentError>;
+
+/// Core component struct for sigma_adjustments.
+#[derive(Debug, Default, Clone)]
+pub struct Component {
+    initialised: bool,
+    name: String,
 }
 
-/// SystemAdjuster manages system-level adjustments such as swappiness,
-/// VFS cache pressure, and CPU governor selection.
-///
-/// This is inspired by Linux Mint's mintsystem approach to system tuning.
-#[derive(Debug, Clone)]
-pub struct SystemAdjuster {
-    swappiness: u32,
-    vfs_cache_pressure: u32,
-    governor: GovernorMode,
-}
-
-impl Default for SystemAdjuster {
-    fn default() -> Self {
+impl Component {
+    /// Create a new, uninitialised component.
+    pub fn new() -> Self {
         Self {
-            swappiness: 10,
-            vfs_cache_pressure: 50,
-            governor: GovernorMode::Schedutil,
+            initialised: false,
+            name: String::from("sigma_adjustments"),
         }
+    }
+
+    /// Initialise the component.
+    pub fn init(&mut self) -> ComponentResult<()> {
+        self.initialised = true;
+        Ok(())
+    }
+
+    /// Returns true if the component has been initialised.
+    pub fn is_ready(&self) -> bool {
+        self.initialised
+    }
+
+    /// Execute the component's primary operation.
+    pub fn run(&self) -> ComponentResult<()> {
+        if !self.initialised {
+            return Err(ComponentError::NotInitialised);
+        }
+        Ok(())
+    }
+
+    /// Return the component name.
+    pub fn name(&self) -> &str {
+        &self.name
+    }
+
+    /// Reset the component to uninitialised state.
+    pub fn reset(&mut self) {
+        self.initialised = false;
     }
 }
 
-impl SystemAdjuster {
-    pub fn new(swappiness: u32, vfs_cache_pressure: u32, governor: GovernorMode) -> Self {
-        Self {
-            swappiness: swappiness.min(100),
-            vfs_cache_pressure: vfs_cache_pressure.min(200),
-            governor,
-        }
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_new_not_ready_aaa() {
+        // Arrange + Act
+        let c = Component::new();
+        // Assert
+        assert!(!c.is_ready());
     }
 
-    /// Returns the swappiness value (0-100).
-    pub fn swappiness(&self) -> u32 {
-        self.swappiness
+    #[test]
+    fn test_init_makes_ready_aaa() {
+        // Arrange
+        let mut c = Component::new();
+        // Act
+        c.init().unwrap();
+        // Assert
+        assert!(c.is_ready());
     }
 
-    /// Returns the VFS cache pressure value.
-    pub fn vfs_cache_pressure(&self) -> u32 {
-        self.vfs_cache_pressure
+    #[test]
+    fn test_run_before_init_fails_aaa() {
+        // Arrange
+        let c = Component::new();
+        // Act
+        let result = c.run();
+        // Assert
+        assert!(result.is_err());
     }
 
-    /// Returns the current governor mode.
-    pub fn governor(&self) -> GovernorMode {
-        self.governor
+    #[test]
+    fn test_run_after_init_succeeds_aaa() {
+        // Arrange
+        let mut c = Component::new();
+        c.init().unwrap();
+        // Act
+        let result = c.run();
+        // Assert
+        assert!(result.is_ok());
     }
 
-    /// Generates a sysctl configuration string for the current settings.
-    ///
-    /// The format is inspired by Linux Mint mintsystem sysctl configurations.
-    pub fn generate_sysctl_conf(&self) -> String {
-        format!(
-            "# SigmaOS System Adjustments (mintsystem inspiration)\nvm.swappiness = {}\nvm.vfs_cache_pressure = {}\n",
-            self.swappiness, self.vfs_cache_pressure
-        )
+    #[test]
+    fn test_reset_clears_init_aaa() {
+        // Arrange
+        let mut c = Component::new();
+        c.init().unwrap();
+        assert!(c.is_ready());
+        // Act
+        c.reset();
+        // Assert
+        assert!(!c.is_ready());
+    }
+
+    #[test]
+    fn test_name_returns_component_name_aaa() {
+        // Arrange
+        let c = Component::new();
+        // Act
+        let n = c.name();
+        // Assert
+        assert!(!n.is_empty());
     }
 }

@@ -1,10 +1,15 @@
 [package]
-name = "sigma-adjustments"
-version = "0.2.0"
+name = "SigmaOS-sigma-adjustments"
+version = "0.1.0"
 edition = "2021"
-authors = ["Aaryan Singh Chauhan <aaryan.singh.chauhan.09@gmail.com>"]
-description = "SigmaOS System Adjustments - inspired by Linux Mint mintsystem"
-license = "GPL-3.0-or-later"
+license = "Apache-2.0"
+description = "SigmaOS sigma_adjustments component"
+
+[lib]
+name = "sigma_adjustments"
+path = "src/lib.rs"
 
 [dependencies]
-sigma-system = { path = "../sigma-system" }
+thiserror = "1"
+
+[dev-dependencies]
